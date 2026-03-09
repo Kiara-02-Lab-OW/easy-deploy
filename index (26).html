@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyDeploy - Upload HTML, Get a Live Link</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            font-family: 'Georgia', serif;
+            background: #faf8f5;
+            color: #2a2520;
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: white;
+            border-bottom: 1px solid #e8e4e0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            opacity: 0.6;
+        }
+
+        nav a {
+            color: #2a2520;
+            text-decoration: none;
+            font-size: 13px;
+            letter-spacing: 0.3px;
+            transition: color 0.2s;
+            margin-left: 32px;
+        }
+
+        nav a:hover {
+            color: #8b7963;
+        }
+
+        nav a:focus {
+            outline: 2px solid #2a2520;
+            outline-offset: 4px;
+        }
+
+        .cta-button {
+            padding: 10px 24px;
+            background: #2a2520;
+            color: white;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: 'Georgia', serif;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .cta-button:hover {
+            background: #1a1510;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .cta-button:focus {
+            outline: 2px solid #2a2520;
+            outline-offset: 2px;
+        }
+
+        /* Hero */
+        .hero {
+            max-width: 900px;
+            margin: 80px auto;
+            text-align: center;
+            padding: 0 40px;
+            animation: fadeUp 0.8s ease-out;
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 400;
+            margin-bottom: 16px;
+            letter-spacing: -0.8px;
+            line-height: 1.2;
+        }
+
+        .hero .subtitle {
+            font-size: 20px;
+            color: #6b6158;
+            margin-bottom: 32px;
+            font-style: italic;
+            font-weight: 300;
+        }
+
+        .hero-emoji {
+            font-size: 80px;
+            margin-bottom: 24px;
+            display: block;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        .btn-primary {
+            padding: 14px 40px;
+            background: #2a2520;
+            color: white;
+            border: none;
+            border-radius: 2px;
+            font-size: 14px;
+            font-family: 'Georgia', serif;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-primary:hover {
+            background: #1a1510;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary:focus {
+            outline: 2px solid #2a2520;
+            outline-offset: 3px;
+        }
+
+        .btn-secondary {
+            padding: 14px 40px;
+            background: transparent;
+            color: #2a2520;
+            border: 2px solid #c9bdb3;
+            border-radius: 2px;
+            font-size: 14px;
+            font-family: 'Georgia', serif;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-secondary:hover {
+            border-color: #8b7963;
+            background: #f9f6f2;
+        }
+
+        .btn-secondary:focus {
+            outline: 2px solid #2a2520;
+            outline-offset: 3px;
+        }
+
+        /* Value Props */
+        .value-props {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 40px;
+            max-width: 1000px;
+            margin: 100px auto 0;
+            padding: 0 40px;
+        }
+
+        .value-prop {
+            text-align: center;
+            animation: fadeUp 0.8s ease-out;
+            animation-fill-mode: backwards;
+        }
+
+        .value-prop:nth-child(1) { animation-delay: 0.2s; }
+        .value-prop:nth-child(2) { animation-delay: 0.4s; }
+        .value-prop:nth-child(3) { animation-delay: 0.6s; }
+
+        .prop-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .prop-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+        }
+
+        .prop-desc {
+            font-size: 13px;
+            color: #8b7963;
+            line-height: 1.7;
+        }
+
+        /* Demo Section */
+        .demo-section {
+            margin-top: 100px;
+            padding: 60px 40px;
+            background: white;
+            border-top: 1px solid #e8e4e0;
+            border-bottom: 1px solid #e8e4e0;
+        }
+
+        .demo-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .demo-title {
+            font-size: 32px;
+            font-weight: 400;
+            text-align: center;
+            margin-bottom: 48px;
+            letter-spacing: -0.5px;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .demo-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .demo-step {
+            display: flex;
+            gap: 20px;
+        }
+
+        .step-number {
+            min-width: 32px;
+            width: 32px;
+            height: 32px;
+            background: #f9f6f2;
+            border: 2px solid #c9bdb3;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: #2a2520;
+            flex-shrink: 0;
+        }
+
+        .step-content h3 {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            letter-spacing: -0.2px;
+        }
+
+        .step-content p {
+            font-size: 13px;
+            color: #8b7963;
+            line-height: 1.6;
+        }
+
+        .demo-image {
+            background: linear-gradient(135deg, #f5f3f0 0%, #e8e4e0 100%);
+            border-radius: 2px;
+            padding: 40px;
+            text-align: center;
+            border: 1px solid #dcd8d3;
+        }
+
+        .demo-image-inner {
+            background: white;
+            padding: 32px;
+            border-radius: 2px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .mock-browser {
+            text-align: left;
+        }
+
+        .browser-chrome {
+            background: #f5f3f0;
+            padding: 8px;
+            border-radius: 2px 2px 0 0;
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .browser-dot {
+            width: 8px;
+            height: 8px;
+            background: #c9bdb3;
+            border-radius: 50%;
+        }
+
+        .browser-url {
+            background: white;
+            padding: 12px;
+            font-size: 11px;
+            color: #8b7963;
+            border-radius: 0 0 2px 2px;
+            font-family: monospace;
+            word-break: break-all;
+            border: 1px solid #dcd8d3;
+        }
+
+        /* Features */
+        .features {
+            max-width: 1000px;
+            margin: 100px auto;
+            padding: 0 40px;
+        }
+
+        .features-title {
+            font-size: 32px;
+            font-weight: 400;
+            text-align: center;
+            margin-bottom: 60px;
+            letter-spacing: -0.5px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+        }
+
+        .feature-card {
+            padding: 32px;
+            background: white;
+            border: 1px solid #e8e4e0;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+            animation: fadeUp 0.8s ease-out;
+            animation-fill-mode: backwards;
+        }
+
+        .feature-card:nth-child(1) { animation-delay: 0.1s; }
+        .feature-card:nth-child(2) { animation-delay: 0.2s; }
+        .feature-card:nth-child(3) { animation-delay: 0.3s; }
+        .feature-card:nth-child(4) { animation-delay: 0.4s; }
+        .feature-card:nth-child(5) { animation-delay: 0.5s; }
+        .feature-card:nth-child(6) { animation-delay: 0.6s; }
+
+        .feature-card:hover {
+            border-color: #8b7963;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+            transform: translateY(-4px);
+        }
+
+        .feature-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .feature-name {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            letter-spacing: -0.2px;
+        }
+
+        .feature-desc {
+            font-size: 13px;
+            color: #8b7963;
+            line-height: 1.7;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            margin: 100px 0 0;
+            padding: 80px 40px;
+            background: linear-gradient(135deg, #2a2520 0%, #3d3531 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 40px;
+            font-weight: 400;
+            margin-bottom: 24px;
+            letter-spacing: -0.5px;
+        }
+
+        .cta-section p {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-section .btn-primary {
+            background: white;
+            color: #2a2520;
+            font-weight: 600;
+        }
+
+        .cta-section .btn-primary:hover {
+            background: #f9f6f2;
+            transform: translateY(-2px);
+        }
+
+        /* Footer */
+        footer {
+            background: #faf8f5;
+            border-top: 1px solid #e8e4e0;
+            padding: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #8b7963;
+        }
+
+        footer a {
+            color: #8b7963;
+            text-decoration: none;
+            border-bottom: 1px dotted #c9bdb3;
+        }
+
+        footer a:hover {
+            color: #2a2520;
+            border-bottom-color: #2a2520;
+        }
+
+        /* Animations */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                padding: 16px 20px;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            nav a {
+                margin-left: 0;
+            }
+
+            .hero {
+                margin: 40px auto;
+                padding: 0 20px;
+            }
+
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero .subtitle {
+                font-size: 16px;
+            }
+
+            .hero-emoji {
+                font-size: 56px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+
+            .value-props {
+                gap: 32px;
+                padding: 0 20px;
+            }
+
+            .demo-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .demo-section {
+                padding: 40px 20px;
+            }
+
+            .features {
+                padding: 0 20px;
+            }
+
+            .cta-section {
+                padding: 60px 20px;
+            }
+
+            .cta-section h2 {
+                font-size: 28px;
+            }
+
+            footer {
+                padding: 32px 20px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">📤 EasyDeploy</div>
+        <div style="display: flex; gap: 32px; align-items: center;">
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How it works</a>
+            <a href="#docs">Docs</a>
+            <button class="cta-button" onclick="scrollToGetStarted()">Get Started</button>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero" id="hero">
+        <span class="hero-emoji">📤</span>
+        <h1>Upload HTML.<br>Get a Live Link.</h1>
+        <p class="subtitle">No servers, no configuration. Just drop your file and share.</p>
+        <div class="hero-buttons">
+            <button class="btn-primary" onclick="scrollToGetStarted()">Start Free</button>
+            <button class="btn-secondary" onclick="scrollToHowItWorks()">See How</button>
+        </div>
+    </section>
+
+    <!-- Value Propositions -->
+    <section class="value-props">
+        <div class="value-prop">
+            <span class="prop-icon">⚡</span>
+            <div class="prop-title">Instant Deploy</div>
+            <div class="prop-desc">No waiting. Your site is live in seconds.</div>
+        </div>
+        <div class="value-prop">
+            <span class="prop-icon">🔗</span>
+            <div class="prop-title">Shareable Link</div>
+            <div class="prop-desc">Get a unique URL + QR code instantly.</div>
+        </div>
+        <div class="value-prop">
+            <span class="prop-icon">🔓</span>
+            <div class="prop-title">No Lock-in</div>
+            <div class="prop-desc">Own your data. Download anytime, use anywhere.</div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section class="demo-section" id="how-it-works">
+        <div class="demo-container">
+            <h2 class="demo-title">3 Steps to Live</h2>
+            <div class="demo-grid">
+                <div class="demo-steps">
+                    <div class="demo-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Upload Your HTML</h3>
+                            <p>Create a .html file on your computer, then drag it into EasyDeploy.</p>
+                        </div>
+                    </div>
+                    <div class="demo-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>We Deploy It</h3>
+                            <p>We store your file securely and instantly generate a shareable link.</p>
+                        </div>
+                    </div>
+                    <div class="demo-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Share & Done</h3>
+                            <p>Copy the link, scan the QR code, and share with anyone. They see your site live.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="demo-image">
+                    <div class="demo-image-inner">
+                        <div class="mock-browser">
+                            <div class="browser-chrome">
+                                <div class="browser-dot"></div>
+                                <div class="browser-dot"></div>
+                                <div class="browser-dot"></div>
+                            </div>
+                            <div class="browser-url">https://easydeploy.io/happy-cat-1234</div>
+                        </div>
+                        <div style="padding: 24px; background: white; text-align: center; margin-top: 12px;">
+                            <div style="font-size: 48px; margin-bottom: 12px;">🐱</div>
+                            <div style="font-size: 18px; font-weight: 500; color: #2a2520; margin-bottom: 8px;">Hello World!</div>
+                            <div style="font-size: 13px; color: #8b7963;">Your HTML rendered live</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <h2 class="features-title">Built for Everyone</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <div class="feature-name">Mobile Friendly</div>
+                <div class="feature-desc">Works on any device. Responsive design built-in.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <div class="feature-name">Full HTML Support</div>
+                <div class="feature-desc">CSS, JavaScript, images—everything works.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <div class="feature-name">Secure Storage</div>
+                <div class="feature-desc">Your files encrypted. Auto-delete after 30 days.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <div class="feature-name">Basic Analytics</div>
+                <div class="feature-desc">See how many people visited your link.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <div class="feature-name">Lightning Fast</div>
+                <div class="feature-desc">CDN cached. Load times under 100ms.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💻</div>
+                <div class="feature-name">API Ready</div>
+                <div class="feature-desc">Integrate with your app. Simple REST API.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="get-started">
+        <h2>Ready to Share Your HTML?</h2>
+        <p>No credit card. No sign-up. Just upload and go. Get your first deployment in seconds.</p>
+        <button class="btn-primary" onclick="window.location.href='upload.html'">Open Uploader</button>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>
+            EasyDeploy &copy; 2024 • 
+            <a href="#privacy">Privacy</a> • 
+            <a href="#terms">Terms</a> • 
+            <a href="#github">GitHub</a> • 
+            <a href="#status">Status</a>
+        </p>
+    </footer>
+
+    <script>
+        function scrollToGetStarted() {
+            document.getElementById('get-started').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function scrollToHowItWorks() {
+            document.getElementById('how-it-works').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
