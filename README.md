@@ -1,4 +1,4 @@
-# DepBaby - Deployment Tool for 5yo
+# EasyDeploy - Deployment Tool for Everyone
 
 Upload HTML → Get URL. No vendor lock-in.
 
