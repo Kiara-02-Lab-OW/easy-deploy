@@ -4,28 +4,56 @@ import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3
 import { Readable } from 'stream';
 import path from 'path';
 import crypto from 'crypto';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env.local (for development) or .env.production
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.local';
+dotenv.config({ path: path.join(__dirname, '..', envFile) });
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
+
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Configuration from environment variables
+const config = {
+  minio: {
+    endpoint: process.env.MINIO_ENDPOINT || 'http://minio:9000',
+    accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
+    secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
+    bucketName: process.env.MINIO_BUCKET_NAME || 'kids-html',
+  },
+  server: {
+    baseUrl: process.env.BASE_URL || `http://localhost:${PORT}`,
+  },
+  rateLimit: {
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '300000', 10),
+    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1', 10),
+  },
+  upload: {
+    maxFileSizeMB: parseInt(process.env.MAX_FILE_SIZE_MB || '10', 10),
+  },
+};
 
 // Minio S3 client configuration
 const s3Client = new S3Client({
   region: 'us-east-1',
-  endpoint: process.env.MINIO_ENDPOINT || 'http://minio:9000',
+  endpoint: config.minio.endpoint,
   credentials: {
-    accessKeyId: process.env.MINIO_ACCESS_KEY || 'minioadmin',
-    secretAccessKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
+    accessKeyId: config.minio.accessKey,
+    secretAccessKey: config.minio.secretKey,
   },
   forcePathStyle: true,
 });
 
-const BUCKET_NAME = 'kids-html';
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const BUCKET_NAME = config.minio.bucketName;
+const MAX_FILE_SIZE = config.upload.maxFileSizeMB * 1024 * 1024;
 
 // Rate limiting: simple in-memory store (IP → timestamps)
 const rateLimitStore = new Map<string, number[]>();
-const RATE_LIMIT_WINDOW = 5 * 60 * 1000; // 5 minutes
-const RATE_LIMIT_MAX = 1; // 1 upload per window
+const RATE_LIMIT_WINDOW = config.rateLimit.windowMs;
+const RATE_LIMIT_MAX = config.rateLimit.maxRequests;
 
 // Multer for file upload
 const upload = multer({
@@ -104,8 +132,7 @@ app.post(
         })
       );
 
-      const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
-      const deploymentUrl = `${baseUrl}/${slug}`;
+      const deploymentUrl = `${config.server.baseUrl}/${slug}`;
 
       res.json({
         slug,
@@ -119,7 +146,17 @@ app.post(
   }
 );
 
-// Serve deployed HTML
+// Home page - serve UI (must be before /:slug route)
+app.get('/', (_req: Request, res: Response) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
+// Health check
+app.get('/health', (_req: Request, res: Response) => {
+  res.json({ status: 'ok' });
+});
+
+// Serve deployed HTML (must be last to avoid catching other routes)
 app.get('/:slug', async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
@@ -156,13 +193,11 @@ app.get('/:slug', async (req: Request, res: Response) => {
   }
 });
 
-// Health check
-app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok' });
-});
-
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📤 Upload: POST /api/deploy`);
   console.log(`📄 View: GET /:slug`);
+  console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📦 Bucket: ${config.minio.bucketName}`);
+  console.log(`🔗 Base URL: ${config.server.baseUrl}`);
 });

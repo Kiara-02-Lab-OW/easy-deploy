@@ -30,18 +30,15 @@ services:
     container_name: kids-html-backend
     ports:
       - '3000:3000'
-    environment:
-      NODE_ENV: production
-      PORT: 3000
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
-      BASE_URL: http://localhost:3000
+    env_file:
+      - .env.local
     depends_on:
       minio:
         condition: service_healthy
     volumes:
       - ./src:/app/src
+      - ./public:/app/public
+      - ./.env.local:/app/.env.local:ro
       - /app/node_modules
     command: npm run dev
     networks:
