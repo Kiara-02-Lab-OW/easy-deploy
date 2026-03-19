@@ -139,9 +139,21 @@ app.post(
         url: deploymentUrl,
         qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(deploymentUrl)}`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Deploy error:', error);
-      res.status(500).json({ error: 'Deployment failed' });
+      const errorMessage = error.message || 'Deployment failed';
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        endpoint: config.minio.endpoint,
+        bucket: BUCKET_NAME
+      });
+      res.status(500).json({
+        error: process.env.NODE_ENV === 'development'
+          ? `Deployment failed: ${errorMessage}`
+          : 'Deployment failed'
+      });
     }
   }
 );
