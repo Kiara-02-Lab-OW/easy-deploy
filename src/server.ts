@@ -1,7 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
-import { Readable } from 'stream';
+import { createClient } from '@supabase/supabase-js';
 import path from 'path';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
@@ -18,11 +17,10 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 // Configuration from environment variables
 const config = {
-  minio: {
-    endpoint: process.env.MINIO_ENDPOINT || 'http://minio:9000',
-    accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
-    secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
-    bucketName: process.env.MINIO_BUCKET_NAME || 'kids-html',
+  supabase: {
+    url: process.env.SUPABASE_URL || '',
+    serviceKey: process.env.SUPABASE_SERVICE_KEY || '',
+    bucketName: process.env.SUPABASE_BUCKET_NAME || 'deploy-files',
   },
   server: {
     baseUrl: process.env.BASE_URL || `http://localhost:${PORT}`,
@@ -36,18 +34,10 @@ const config = {
   },
 };
 
-// Minio S3 client configuration
-const s3Client = new S3Client({
-  region: 'us-east-1',
-  endpoint: config.minio.endpoint,
-  credentials: {
-    accessKeyId: config.minio.accessKey,
-    secretAccessKey: config.minio.secretKey,
-  },
-  forcePathStyle: true,
-});
+// Supabase client configuration
+const supabase = createClient(config.supabase.url, config.supabase.serviceKey);
 
-const BUCKET_NAME = config.minio.bucketName;
+const BUCKET_NAME = config.supabase.bucketName;
 const MAX_FILE_SIZE = config.upload.maxFileSizeMB * 1024 * 1024;
 
 // Rate limiting: simple in-memory store (IP → timestamps)
@@ -118,19 +108,21 @@ app.post(
       const slug = generateSlug();
       const fileName = `${slug}.html`;
 
-      // Upload to Minio
-      await s3Client.send(
-        new PutObjectCommand({
-          Bucket: BUCKET_NAME,
-          Key: fileName,
-          Body: req.file.buffer,
-          ContentType: 'text/html; charset=utf-8',
-          Metadata: {
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(fileName, req.file.buffer, {
+          contentType: 'text/html; charset=utf-8',
+          upsert: false,
+          metadata: {
             'original-filename': req.file.originalname,
             'upload-timestamp': new Date().toISOString(),
           },
-        })
-      );
+        });
+
+      if (error) {
+        throw new Error(`Supabase upload failed: ${error.message}`);
+      }
 
       const deploymentUrl = `${config.server.baseUrl}/${slug}`;
 
@@ -145,8 +137,7 @@ app.post(
       console.error('Error details:', {
         name: error.name,
         message: error.message,
-        code: error.code,
-        endpoint: config.minio.endpoint,
+        supabaseUrl: config.supabase.url,
         bucket: BUCKET_NAME
       });
       res.status(500).json({
@@ -180,26 +171,27 @@ app.get('/:slug', async (req: Request, res: Response) => {
 
     const fileName = `${slug}.html`;
 
-    const response = await s3Client.send(
-      new GetObjectCommand({
-        Bucket: BUCKET_NAME,
-        Key: fileName,
-      })
-    );
+    // Download from Supabase Storage
+    const { data, error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .download(fileName);
+
+    if (error) {
+      console.error('Supabase download error:', error);
+      return res.status(404).send('File not found');
+    }
+
+    if (!data) {
+      return res.status(404).send('File not found');
+    }
+
+    // Convert Blob to text
+    const htmlContent = await data.text();
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=3600');
-
-    // Stream the file
-    if (response.Body instanceof Readable) {
-      response.Body.pipe(res);
-    } else {
-      res.send(await response.Body?.transformToString());
-    }
+    res.send(htmlContent);
   } catch (error: any) {
-    if (error.name === 'NoSuchKey') {
-      return res.status(404).send('File not found');
-    }
     console.error('Fetch error:', error);
     res.status(500).send('Error retrieving file');
   }
@@ -210,6 +202,6 @@ app.listen(PORT, () => {
   console.log(`📤 Upload: POST /api/deploy`);
   console.log(`📄 View: GET /:slug`);
   console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📦 Bucket: ${config.minio.bucketName}`);
+  console.log(`💾 Storage: Supabase (${config.supabase.bucketName})`);
   console.log(`🔗 Base URL: ${config.server.baseUrl}`);
 });
