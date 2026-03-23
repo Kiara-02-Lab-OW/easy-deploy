@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: easy-deploy
+    runtime: docker
+    region: oregon
+    plan: free
+    branch: main
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: BASE_URL
+        generateValue: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET_NAME
+        value: deploy-files
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 300000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 1
+      - key: MAX_FILE_SIZE_MB
+        value: 10
+      - key: FILE_EXPIRY_DAYS
+        value: 30
